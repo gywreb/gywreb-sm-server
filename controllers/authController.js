@@ -49,8 +49,32 @@ exports.login = asyncMiddleware(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user) return next(new ErrorResponse(404, "user not found"));
+  if (!user.isEmailConfirmed)
+    return next(new ErrorResponse(400, "Please confirm your email"));
   const isMatched = await user.passwordValidation(password);
   if (!isMatched) return next(new ErrorResponse(400, "password is incorrect"));
   const token = User.genJwt(_.omit(user._doc, "password", "_id", "__v"));
-  res.status(200).json(new SuccessResponse(200, token));
+  res.status(200).json(new SuccessResponse(200, { token }));
 });
+
+exports.confirmEmail = asyncMiddleware(async (req, res, next) => {
+  const { token } = req.query;
+  if (!token) return next(new ErrorResponse(400, "invalid token"));
+  const confirmToken = token.split(".")[0];
+  const confirmEmailToken = crypto
+    .createHash("sha256")
+    .update(confirmToken)
+    .digest("hex");
+
+  const user = await User.findOneAndUpdate(
+    { confirmEmailToken, isEmailConfirmed: false },
+    { confirmEmailToken: null, isEmailConfirmed: true }
+  );
+  if (!user) return next(new ErrorResponse(400, "invalid token"));
+  res.status(200).json(new SuccessResponse(200, "Your email is confirmed"));
+});
+
+exports.getCurrentUser = (req, res, next) => {
+  if (!req.user) return next(new ErrorResponse(401, "unauthorized"));
+  res.status(200).json(new SuccessResponse(200, req.user));
+};

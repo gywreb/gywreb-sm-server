@@ -2,7 +2,7 @@ const { ErrorResponse } = require("../models/ErrorResponse");
 const jwt = require("jsonwebtoken");
 const User = require("../database/models/User");
 
-exports.jwtAuth = async (req, res, next) => {
+const jwtAuth = async (req, res, next) => {
   let token;
   if (
     req.headers.authorization &&
@@ -24,3 +24,5 @@ exports.jwtAuth = async (req, res, next) => {
     next(error);
   }
 };
+
+module.exports = jwtAuth;

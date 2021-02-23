@@ -1,17 +1,8 @@
 const express = require("express");
-const User = require("../database/models/User");
-const { asyncMiddleware } = require("../middleware/asyncMiddleware");
-const { jwtAuth } = require("../middleware/jwtAuth");
-const { SuccessResponse } = require("../models/SuccessResponse");
+const jwtAuth = require("../middleware/jwtAuth");
+const userController = require("../controllers/userController");
 const router = express.Router();
 
-router.get(
-  "/",
-  jwtAuth,
-  asyncMiddleware(async (req, res, next) => {
-    const users = await User.find();
-    res.status(200).json(new SuccessResponse(200, users));
-  })
-);
+router.get("/", jwtAuth, userController.getAllUser);
 
 module.exports = router;
