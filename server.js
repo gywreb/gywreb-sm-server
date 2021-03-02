@@ -7,6 +7,7 @@ require("colors");
 const cors = require("cors");
 const auth = require("./routes/auth");
 const user = require("./routes/user");
+const post = require("./routes/post");
 
 ConnectMongo.getConnection();
 
@@ -15,6 +16,7 @@ app.use(cors());
 
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/user", user);
+app.use("/api/v1/post", post);
 app.use(errorHandler);
 
 const port = process.env.PORT || 4000;

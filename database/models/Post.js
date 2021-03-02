@@ -3,14 +3,29 @@ const Schema = mongoose.Schema;
 
 const PostSchema = new Schema(
   {
-    title: {
+    caption: {
       type: String,
-      required: [true, "title is required"],
+      required: [true, "caption is required"],
+    },
+    image: {
+      type: String,
     },
     author: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    likes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Likes",
+      },
+    ],
+    comments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Comments",
+      },
+    ],
   },
   { timestamps: true }
 );
