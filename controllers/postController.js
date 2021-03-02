@@ -26,11 +26,11 @@ exports.getPost = asyncMiddleware(async (req, res, next) => {
 });
 
 exports.createPost = asyncMiddleware(async (req, res, next) => {
-  const { caption, author } = req.body;
+  const { caption } = req.body;
 
   const newPost = new Post({
     caption,
-    author,
+    author: req.user._doc._id,
     image: req.file ? req.file.filename : null,
   });
 
