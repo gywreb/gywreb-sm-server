@@ -45,24 +45,24 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    posts: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Post",
-      },
-    ],
-    comments: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Comment",
-      },
-    ],
-    likes: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Like",
-      },
-    ],
+    // posts: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "Post",
+    //   },
+    // ],
+    // comments: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "Comment",
+    //   },
+    // ],
+    // likes: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "Like",
+    //   },
+    // ],
     friends: [
       {
         type: Schema.Types.ObjectId,
