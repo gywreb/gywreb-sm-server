@@ -5,6 +5,8 @@ const { ErrorResponse } = require("../models/ErrorResponse");
 const _ = require("lodash");
 const crypto = require("crypto");
 const { EmailService } = require("../services/EmailService");
+const jwt = require("jsonwebtoken");
+const Token = require("../database/models/Token");
 
 exports.register = asyncMiddleware(async (req, res, next) => {
   const { displayName, email, password } = req.body;
@@ -47,14 +49,37 @@ exports.register = asyncMiddleware(async (req, res, next) => {
 
 exports.login = asyncMiddleware(async (req, res, next) => {
   const { email, password } = req.body;
+
   const user = await User.findOne({ email });
+
   if (!user) return next(new ErrorResponse(404, "user not found"));
   if (!user.isEmailConfirmed)
     return next(new ErrorResponse(400, "Please confirm your email"));
+
   const isMatched = await user.passwordValidation(password);
   if (!isMatched) return next(new ErrorResponse(400, "password is incorrect"));
+
   const token = User.genJwt(_.omit(user._doc, "password", "_id", "__v"));
-  res.status(200).json(new SuccessResponse(200, { token }));
+
+  const refresh_token = jwt.sign(
+    _.omit(user._doc, "password", "_id", "__v"),
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  const salt = crypto.randomBytes(20).toString("hex");
+
+  const hashToken = crypto
+    .createHash("sha256")
+    .update(refresh_token)
+    .digest("hex");
+
+  req.session.refresh_token = hashToken;
+  // save refresh token in db(redis or mongodb)
+
+  res
+    .status(200)
+    .json(new SuccessResponse(200, { token, refresh_token: hashToken }));
 });
 
 exports.confirmEmail = asyncMiddleware(async (req, res, next) => {
@@ -78,3 +103,61 @@ exports.getCurrentUser = (req, res, next) => {
   if (!req.user) return next(new ErrorResponse(401, "unauthorized"));
   res.status(200).json(new SuccessResponse(200, req.user));
 };
+
+exports.resetPassword = asyncMiddleware(async (req, res, next) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user)
+    return next(new ErrorResponse(404, `user with email: ${email} not found`));
+
+  // generate token
+  const token = crypto.randomBytes(20).toString("hex");
+
+  // hash token and save to database
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  await Token.findOneAndUpdate(
+    { email },
+    {
+      userId: user._id,
+      email,
+      token: hashedToken,
+      expiredIn: Date.now() + 1000 * 60,
+    },
+    { upsert: true }
+  );
+
+  // send token to user email
+  EmailService.init();
+
+  await EmailService.sendEmail(
+    email,
+    "Reset Password",
+    `Click this link to reset your password: \n\n${process.env.FE_URL}/resetPassword?token=${token}`,
+    next
+  );
+
+  res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        200,
+        "PLease check your email for reset password process"
+      )
+    );
+});
+
+exports.updatePassword = asyncMiddleware(async (req, res, next) => {
+  const { token } = req.body;
+
+  const hashToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const dbToken = await Token.findOne({
+    token: hashToken,
+    expiredIn: { $gt: Date.now() },
+  });
+
+  if (!dbToken) return next(new ErrorResponse(400, "invalid token"));
+
+  res.status(200).json(new SuccessResponse(200, "ok"));
+});

@@ -21,7 +21,11 @@ const jwtAuth = async (req, res, next) => {
       next(error);
     }
   } catch (error) {
-    next(error);
+    if (error.name === "TokenExpiredError") {
+      next(new ErrorResponse(401, "token is expired"));
+    } else {
+      next(new ErrorResponse(401, "unauthorized"));
+    }
   }
 };
 

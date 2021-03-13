@@ -19,6 +19,8 @@ exports.errorHandler = (err, req, res, next) => {
     }
   }
 
+  console.log(err);
+
   console.log(err.name);
   console.log(err.errors);
 

@@ -36,7 +36,7 @@ exports.createPost = asyncMiddleware(async (req, res, next) => {
 
   const post = await newPost.save();
 
-  await User.findOneAndUpdate({ _id: author }, { $push: { posts: post.id } });
+  await User.findOneAndUpdate({ _id: author }, { $push: { posts: post._id } });
 
   res.status(201).json(new SuccessResponse(201, post));
 });

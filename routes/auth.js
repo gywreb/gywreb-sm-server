@@ -9,5 +9,7 @@ router.post("/register", basicAuth, authController.register);
 router.post("/login", basicAuth, authController.login);
 router.post("/confirmemail", basicAuth, authController.confirmEmail);
 router.get("/currentUser", jwtAuth, authController.getCurrentUser);
+router.post("/resetPassword", authController.resetPassword);
+router.post("/updatePassword", authController.updatePassword);
 
 module.exports = router;

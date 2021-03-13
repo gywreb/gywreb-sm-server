@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const CommentSchema = new Schema(
   {
-    comment: {
+    content: {
       type: String,
       required: [true, "comment is required"],
     },
